@@ -57,6 +57,7 @@
     if (footer) footer.style.display = (view === "welcome") ? "none" : "";
     if (view === "welcome") renderWelcome();
     else if (view === "overview") renderOverview();
+    else if (view === "transition") renderTransition();
     else if (view === "tier") renderTier();
     else if (view === "completion") renderCompletion();
     else renderLevel(view);
@@ -109,9 +110,10 @@
     $app.innerHTML = html;
 
     document.getElementById("startLevel1Btn").addEventListener("click", function () {
-      var startId = firstUnfinished() || 1;
-      view = startId;
+      var startId = firstUnfinished();
+      if (startId === null) { view = "completion"; render(); return; }
       currentTier = tierOf(startId);
+      view = "transition";
       levelStage = "learn";
       render();
     });
@@ -122,6 +124,34 @@
         A.track("tier_open", { tier: currentTier });
         render();
       });
+    });
+  }
+
+  function renderTransition() {
+    var t = currentTier;
+    var lvs = L.filter(function (l) { return l.tier === t; });
+    if (!lvs.length) { view = "overview"; render(); return; }
+
+    var range = I.t("tierRange", { a: lvs[0].id, b: lvs[lvs.length - 1].id });
+    var start = lvs.filter(function (l) { return !isDone(l.id); })[0] || lvs[0];
+
+    var html = '<section class="transition-page">'
+      + '<h1 class="transition-big">' + esc(I.t("transition_" + t + "_title")) + '</h1>'
+      + '<p class="transition-small">' + esc(range) + '</p>'
+      + '<button class="cta" id="transitionStartBtn">' + esc(I.t("transitionStart")) + '</button>'
+      + '<button class="back transition-back" id="transitionBackBtn">' + esc(I.t("backToOverview")) + '</button>'
+      + '</section>';
+    $app.innerHTML = html;
+
+    document.getElementById("transitionStartBtn").addEventListener("click", function () {
+      view = start.id;
+      levelStage = "learn";
+      A.track("transition_start", { tier: t, level: start.id });
+      render();
+    });
+    document.getElementById("transitionBackBtn").addEventListener("click", function () {
+      view = "overview";
+      render();
     });
   }
 
@@ -228,13 +258,20 @@
     document.getElementById("backBtn").addEventListener("click", function () { levelStage = "learn"; render(); });
     document.getElementById("backToLearnBtn").addEventListener("click", function () { levelStage = "learn"; render(); });
     document.getElementById("nextBtn").addEventListener("click", function () {
-      if (id < L.length) {
-        view = id + 1;
-        currentTier = tierOf(id + 1);
-        levelStage = "learn";
-        render();
+      var curIdx = 0;
+      for (var i = 0; i < L.length; i++) { if (L[i].id === id) { curIdx = i; break; } }
+      if (curIdx === L.length - 1) { view = "completion"; render(); return; }
+
+      var nextLevel = L[curIdx + 1];
+      var nextTier = nextLevel.tier;
+      currentTier = nextTier;
+      levelStage = "learn";
+      if (nextTier !== tierOf(id)) {
+        view = "transition";
+      } else {
+        view = nextLevel.id;
       }
-      else { view = "completion"; render(); }
+      render();
     });
 
     setupChallenge(lv, done);
@@ -430,7 +467,7 @@
       S.set("completed", completed);
       S.set("scores", scores);
       A.track("play_again", {});
-      view = 1;
+      view = "transition";
       currentTier = "beginner";
       levelStage = "learn";
       render();

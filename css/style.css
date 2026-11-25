@@ -98,6 +98,19 @@ main { max-width: 960px; margin: 0 auto; padding: 28px 20px 60px; }
 .w-source { font-size: 13px; color: var(--muted); margin-top: 18px; }
 .w-dev { font-size: 13px; color: var(--muted); margin-top: 8px; }
 
+.transition-page {
+  min-height: calc(100vh - 150px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+}
+.transition-big { font-size: 52px; margin: 0 0 12px; line-height: 1.2; }
+.transition-small { font-size: 22px; color: var(--muted); margin: 0 0 32px; }
+.transition-back { margin-top: 22px; }
+
 .overview { padding: 24px 0 10px; text-align: center; }
 .overview .w-badge { margin-bottom: 18px; }
 .overview-title { font-size: 30px; margin: 0 0 8px; }
