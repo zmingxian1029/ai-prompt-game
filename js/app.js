@@ -11,6 +11,7 @@
   var scores = S.get("scores", {});
   var view = "welcome";
   var levelStage = "learn";
+  var currentTier = "beginner";
 
   function lang() { return I.getLang(); }
   function pick(obj) { return (obj && obj[lang()] != null) ? obj[lang()] : (obj ? obj.zh : ""); }
@@ -24,6 +25,10 @@
   function isDone(id) { return completed.indexOf(id) !== -1; }
   function tierLabel(t) { return I.t("tier_" + t); }
   function tierClass(t) { return "tier-" + t; }
+  function tierOf(id) {
+    for (var i = 0; i < L.length; i++) { if (L[i].id === id) return L[i].tier; }
+    return "beginner";
+  }
 
   function firstUnfinished() {
     for (var i = 0; i < L.length; i++) {
@@ -52,6 +57,7 @@
     if (footer) footer.style.display = (view === "welcome") ? "none" : "";
     if (view === "welcome") renderWelcome();
     else if (view === "overview") renderOverview();
+    else if (view === "tier") renderTier();
     else if (view === "completion") renderCompletion();
     else renderLevel(view);
   }
@@ -89,20 +95,12 @@
     tiers.forEach(function (t) {
       var lvs = L.filter(function (l) { return l.tier === t; });
       var range = lvs.length ? I.t("tierRange", { a: lvs[0].id, b: lvs[lvs.length - 1].id }) : "";
-      html += '<div class="tier-group" data-tier="' + t + '">'
-        + '<button class="tier-header" type="button">'
-        + '<span><span class="tier-pill ' + tierClass(t) + '">' + esc(tierLabel(t)) + '</span> ' + esc(range) + '</span>'
-        + '<span class="tier-arrow">▾</span>'
-        + '</button>'
-        + '<div class="tier-body">'
-        + lvs.map(function (l) {
-          return '<div class="tier-level" data-id="' + l.id + '">'
-            + '<span class="tl-num">' + esc(I.t("levelPrefix", { n: l.id })) + '</span>'
-            + '<span class="tl-title">' + esc(pick(l.title)) + '</span>'
-            + '<span class="tl-desc">' + esc(pick(l.concept)) + '</span>'
-            + '</div>';
-        }).join("")
-        + '</div></div>';
+      html += '<button class="tier-card" type="button" data-tier="' + t + '">'
+        + '<span class="tier-pill ' + tierClass(t) + '">' + esc(tierLabel(t)) + '</span>'
+        + '<span class="tier-card-range">' + esc(range) + '</span>'
+        + '<span class="tier-card-count">' + esc(I.t("levelsCount", { n: lvs.length })) + '</span>'
+        + '<span class="tier-card-arrow">→</span>'
+        + '</button>';
     });
 
     html += '<p class="loop-note">' + esc(I.t("loopNote")) + '</p>'
@@ -111,15 +109,56 @@
     $app.innerHTML = html;
 
     document.getElementById("startLevel1Btn").addEventListener("click", function () {
-      view = firstUnfinished() || 1;
+      var startId = firstUnfinished() || 1;
+      view = startId;
+      currentTier = tierOf(startId);
       levelStage = "learn";
       render();
     });
-    document.querySelectorAll(".tier-header").forEach(function (el) {
+    document.querySelectorAll(".tier-card").forEach(function (el) {
       el.addEventListener("click", function () {
-        el.parentElement.classList.toggle("open");
-        A.track("tier_expand", { tier: el.parentElement.getAttribute("data-tier") });
+        currentTier = el.getAttribute("data-tier");
+        view = "tier";
+        A.track("tier_open", { tier: currentTier });
+        render();
       });
+    });
+  }
+
+  function renderTier() {
+    var t = currentTier;
+    var lvs = L.filter(function (l) { return l.tier === t; });
+    if (!lvs.length) { view = "overview"; render(); return; }
+
+    var range = I.t("tierRange", { a: lvs[0].id, b: lvs[lvs.length - 1].id });
+    var next = lvs.filter(function (l) { return !isDone(l.id); })[0] || lvs[0];
+
+    var html = '<section class="tier-page">'
+      + '<button class="back" id="backToOverviewBtn">' + esc(I.t("backToOverview")) + '</button>'
+      + '<h2>' + esc(tierLabel(t)) + ' · ' + esc(range) + '</h2>'
+      + '<p class="tier-page-desc">' + esc(I.t("tierPageDesc")) + '</p>'
+      + '<div class="tier-levels">'
+      + lvs.map(function (l) {
+        return '<div class="tier-level' + (isDone(l.id) ? ' done' : '') + '" data-id="' + l.id + '">'
+          + '<span class="tl-num">' + esc(I.t("levelPrefix", { n: l.id })) + '</span>'
+          + '<span class="tl-title">' + esc(pick(l.title)) + '</span>'
+          + '<span class="tl-desc">' + esc(pick(l.concept)) + '</span>'
+          + (isDone(l.id) ? '<span class="tl-check">✓</span>' : '')
+          + '</div>';
+      }).join("")
+      + '</div>'
+      + '<button class="cta" id="startTierBtn">' + esc(I.t("tierStart", { n: next.id })) + '</button>'
+      + '</section>';
+    $app.innerHTML = html;
+
+    document.getElementById("backToOverviewBtn").addEventListener("click", function () {
+      view = "overview";
+      render();
+    });
+    document.getElementById("startTierBtn").addEventListener("click", function () {
+      view = next.id;
+      levelStage = "learn";
+      render();
     });
     document.querySelectorAll(".tier-level").forEach(function (el) {
       el.addEventListener("click", function () {
@@ -160,7 +199,12 @@
         + '<div class="btn-row"><button class="btn" id="goChallengeBtn">' + esc(I.t("goChallenge")) + '</button></div>'
         + '</div>';
       $app.innerHTML = html;
-      document.getElementById("backBtn").addEventListener("click", function () { view = "overview"; render(); });
+      document.getElementById("backBtn").addEventListener("click", function () {
+        view = "tier";
+        currentTier = lv.tier;
+        levelStage = "learn";
+        render();
+      });
       document.getElementById("goChallengeBtn").addEventListener("click", function () {
         levelStage = "challenge";
         A.track("challenge_start", { level: lv.id });
@@ -184,7 +228,12 @@
     document.getElementById("backBtn").addEventListener("click", function () { levelStage = "learn"; render(); });
     document.getElementById("backToLearnBtn").addEventListener("click", function () { levelStage = "learn"; render(); });
     document.getElementById("nextBtn").addEventListener("click", function () {
-      if (id < L.length) { view = id + 1; levelStage = "learn"; render(); }
+      if (id < L.length) {
+        view = id + 1;
+        currentTier = tierOf(id + 1);
+        levelStage = "learn";
+        render();
+      }
       else { view = "completion"; render(); }
     });
 
@@ -382,6 +431,7 @@
       S.set("scores", scores);
       A.track("play_again", {});
       view = 1;
+      currentTier = "beginner";
       levelStage = "learn";
       render();
     });

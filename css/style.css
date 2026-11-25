@@ -146,6 +146,43 @@ main { max-width: 960px; margin: 0 auto; padding: 28px 20px 60px; }
 .tl-num { color: var(--accent); font-weight: 700; font-size: 14px; min-width: 52px; }
 .tl-title { font-weight: 600; min-width: 140px; }
 .tl-desc { color: var(--muted); font-size: 14px; }
+.tier-levels {
+  max-width: 640px;
+  margin: 0 auto 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  text-align: left;
+}
+.tier-levels .tier-level:first-child { border-top: none; }
+.tier-level.done { background: #fafefb; }
+.tl-check { margin-left: auto; color: var(--good); font-weight: 800; }
+.tier-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto 12px;
+  padding: 16px 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 15px;
+  text-align: left;
+  color: var(--ink);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.tier-card:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+.tier-card-range { color: var(--muted); }
+.tier-card-count { margin-left: auto; color: var(--muted); font-size: 13px; }
+.tier-card-arrow { color: var(--accent); font-weight: 700; }
+.tier-page { padding: 10px 0; }
+.tier-page h2 { margin: 12px 0 6px; }
+.tier-page-desc { color: var(--muted); margin: 0 0 18px; }
 .loop-note { color: var(--muted); margin: 18px 0 20px; }
 
 .section-title { font-size: 20px; margin: 34px 0 14px; }
