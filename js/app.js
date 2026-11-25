@@ -10,6 +10,7 @@
   var completed = S.get("completed", []);
   var scores = S.get("scores", {});
   var view = "welcome";
+  var levelStage = "learn";
 
   function lang() { return I.getLang(); }
   function pick(obj) { return (obj && obj[lang()] != null) ? obj[lang()] : (obj ? obj.zh : ""); }
@@ -111,6 +112,7 @@
 
     document.getElementById("startLevel1Btn").addEventListener("click", function () {
       view = firstUnfinished() || 1;
+      levelStage = "learn";
       render();
     });
     document.querySelectorAll(".tier-header").forEach(function (el) {
@@ -122,6 +124,7 @@
     document.querySelectorAll(".tier-level").forEach(function (el) {
       el.addEventListener("click", function () {
         view = parseInt(el.getAttribute("data-id"), 10);
+        levelStage = "learn";
         A.track("level_open", { level: view });
         render();
       });
@@ -131,118 +134,61 @@
   function renderLevel(id) {
     var lv = null;
     for (var i = 0; i < L.length; i++) { if (L[i].id === id) { lv = L[i]; break; } }
-    if (!lv) { view = "landing"; render(); return; }
+    if (!lv) { view = "overview"; render(); return; }
 
     var done = isDone(id);
     var pct = Math.round((completed.length / L.length) * 100);
-    var liveEndpoint = (window.CONFIG && window.CONFIG.API_ENDPOINT) || "";
+    var isChallenge = levelStage === "challenge";
 
     var html = '<div class="level-view">'
-      + '<button class="back" id="backBtn">' + esc(I.t("back")) + '</button>'
+      + '<button class="back" id="backBtn">' + esc(isChallenge ? I.t("backToLearn") : I.t("back")) + '</button>'
       + '<h2>' + esc(I.t("levelPrefix", { n: lv.id })) + ' · ' + esc(pick(lv.title)) + '</h2>'
       + '<div class="tier-line"><span class="tier-pill ' + tierClass(lv.tier) + '">' + esc(tierLabel(lv.tier)) + '</span> ' + esc(pick(lv.concept)) + '</div>'
       + '<div class="progress-bar"><div class="fill" style="width:' + pct + '%"></div></div>'
       + '<div class="tier-line">' + esc(I.t("progressLabel")) + ': ' + completed.length + '/' + L.length + ' · ' + esc(I.t("scoreLabel")) + ': ' + totalScore() + '</div>';
 
-    html += '<div class="card"><h3>' + esc(I.t("learnTitle")) + '</h3>'
-      + '<div class="concept">' + esc(pick(lv.concept)) + '</div>'
-      + '<p>' + nl2br(pick(lv.learn)) + '</p>'
-      + (lv.points ? '<div class="points"><span class="points-title">' + esc(I.t("learnPoints")) + '</span><ul>' + lv.points.map(function (p) { return '<li>' + esc(pick(p)) + '</li>'; }).join("") + '</ul></div>' : '')
-      + (lv.why ? '<div class="why">' + esc(I.t("learnWhy")) + '：' + esc(pick(lv.why)) + '</div>' : '')
-      + '<div class="example-box">'
-      + '<div class="col bad"><span class="label">✗ ' + esc(I.t("badExample")) + '</span>' + nl2br(pick(lv.example.bad)) + '</div>'
-      + '<div class="col good"><span class="label">✓ ' + esc(I.t("goodExample")) + '</span>' + nl2br(pick(lv.example.good)) + '</div>'
-      + '</div></div>';
+    if (!isChallenge) {
+      html += '<div class="card"><h3>' + esc(I.t("learnTitle")) + '</h3>'
+        + '<div class="concept">' + esc(pick(lv.concept)) + '</div>'
+        + '<p>' + nl2br(pick(lv.learn)) + '</p>'
+        + (lv.points ? '<div class="points"><span class="points-title">' + esc(I.t("learnPoints")) + '</span><ul>' + lv.points.map(function (p) { return '<li>' + esc(pick(p)) + '</li>'; }).join("") + '</ul></div>' : '')
+        + (lv.why ? '<div class="why">' + esc(I.t("learnWhy")) + '：' + esc(pick(lv.why)) + '</div>' : '')
+        + '<div class="example-box">'
+        + '<div class="col bad"><span class="label">✗ ' + esc(I.t("badExample")) + '</span>' + nl2br(pick(lv.example.bad)) + '</div>'
+        + '<div class="col good"><span class="label">✓ ' + esc(I.t("goodExample")) + '</span>' + nl2br(pick(lv.example.good)) + '</div>'
+        + '</div></div>'
+        + '<div class="btn-row"><button class="btn" id="goChallengeBtn">' + esc(I.t("goChallenge")) + '</button></div>'
+        + '</div>';
+      $app.innerHTML = html;
+      document.getElementById("backBtn").addEventListener("click", function () { view = "overview"; render(); });
+      document.getElementById("goChallengeBtn").addEventListener("click", function () {
+        levelStage = "challenge";
+        A.track("challenge_start", { level: lv.id });
+        render();
+      });
+      return;
+    }
 
     html += '<div class="card" id="challengeCard"><h3>' + esc(I.t("challengeTitle")) + '</h3>'
       + '<p>' + esc(pick(lv.challenge.question)) + '</p>'
       + '<div id="challengeBody"></div>'
       + '<div class="btn-row"><button class="btn" id="checkBtn">' + esc(I.t("check")) + '</button><button class="btn btn-ghost" id="resetBtn">' + esc(I.t("reset")) + '</button></div>'
       + '<div class="feedback" id="feedback"></div>'
-      + '</div>';
-
-    if (liveEndpoint) {
-      html += '<div class="card"><h3>' + esc(I.t("sandboxTitle")) + '</h3>'
-        + '<div class="example-chips"><span class="chips-label">' + esc(I.t("sandboxTryExample")) + '</span>'
-        + (lv.sandbox || []).map(function (p) {
-          return '<button type="button" class="example-chip" data-text="' + esc(pick(p.input)) + '">' + esc(pick(p.input)) + '</button>';
-        }).join("")
-        + '</div>'
-        + '<textarea id="sandboxInput" class="sandbox-input" rows="3" placeholder="' + esc(I.t("sandboxPlaceholder")) + '"></textarea>'
-        + '<div class="btn-row"><button class="btn" id="sandboxRun">' + esc(I.t("sandboxRun")) + '</button></div>'
-        + '<div class="sandbox-result" id="sandboxResult"></div>'
-        + '</div>';
-    } else {
-      html += '<div class="card"><h3>' + esc(I.t("sandboxTitle")) + '</h3>'
-        + (lv.sandbox || []).map(function (p) {
-          return '<div class="sandbox-pair"><div class="in"><span class="tag">' + esc(lang() === "zh" ? "输入" : "Input") + '</span>' + nl2br(pick(p.input)) + '</div>'
-            + '<div class="out"><span class="tag">' + esc(lang() === "zh" ? "输出" : "Output") + '</span>' + nl2br(pick(p.output)) + '</div></div>';
-        }).join("")
-        + '<p class="note">' + esc(I.t("sandboxNote")) + '</p></div>';
-    }
-
-    html += '<div class="btn-row">'
-      + '<button class="btn btn-ghost" id="prevBtn" ' + (id === 1 ? "disabled" : "") + '>←</button>'
-      + '<button class="btn" id="nextBtn" ' + (done ? "" : "disabled") + '>' + esc(I.t("next")) + '</button>'
+      + '</div>'
+      + '<div class="btn-row">'
+      + '<button class="btn btn-ghost" id="backToLearnBtn">' + esc(I.t("backToLearn")) + '</button>'
+      + '<button class="btn" id="nextBtn" ' + (done ? "" : "disabled") + '>' + esc(id < L.length ? I.t("next") : I.t("finish")) + '</button>'
       + '</div></div>';
-
     $app.innerHTML = html;
 
-    document.getElementById("backBtn").addEventListener("click", function () { view = "overview"; render(); });
-    var prev = document.getElementById("prevBtn");
-    if (prev) prev.addEventListener("click", function () { if (id > 1) { view = id - 1; render(); } });
-    var next = document.getElementById("nextBtn");
-    if (next) next.addEventListener("click", function () {
-      if (id < L.length) { view = id + 1; render(); }
+    document.getElementById("backBtn").addEventListener("click", function () { levelStage = "learn"; render(); });
+    document.getElementById("backToLearnBtn").addEventListener("click", function () { levelStage = "learn"; render(); });
+    document.getElementById("nextBtn").addEventListener("click", function () {
+      if (id < L.length) { view = id + 1; levelStage = "learn"; render(); }
       else { view = "completion"; render(); }
     });
 
     setupChallenge(lv, done);
-    if (liveEndpoint) attachSandbox(liveEndpoint, lv);
-  }
-
-  function attachSandbox(endpoint, lv) {
-    var input = document.getElementById("sandboxInput");
-    var runBtn = document.getElementById("sandboxRun");
-    var result = document.getElementById("sandboxResult");
-    if (!input || !runBtn || !result) return;
-
-    document.querySelectorAll(".example-chip").forEach(function (chip) {
-      chip.addEventListener("click", function () {
-        input.value = chip.getAttribute("data-text");
-      });
-    });
-
-    runBtn.addEventListener("click", function () {
-      var prompt = input.value.trim();
-      if (!prompt) return;
-
-      runBtn.disabled = true;
-      result.textContent = I.t("sandboxLoading");
-      result.className = "sandbox-result loading";
-      A.track("sandbox_generate", { level: lv.id });
-
-      fetch(endpoint + "/api/generate", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ prompt: prompt })
-      }).then(function (r) {
-        return r.json();
-      }).then(function (data) {
-        runBtn.disabled = false;
-        if (data && data.text) {
-          result.textContent = data.text;
-          result.className = "sandbox-result done";
-        } else {
-          result.textContent = I.t("sandboxError");
-          result.className = "sandbox-result error";
-        }
-      }).catch(function () {
-        runBtn.disabled = false;
-        result.textContent = I.t("sandboxError");
-        result.className = "sandbox-result error";
-      });
-    });
   }
 
   function setupChallenge(lv, alreadyDone) {
@@ -436,6 +382,7 @@
       S.set("scores", scores);
       A.track("play_again", {});
       view = 1;
+      levelStage = "learn";
       render();
     });
   }
