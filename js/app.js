@@ -30,13 +30,6 @@
     return "beginner";
   }
 
-  function firstUnfinished() {
-    for (var i = 0; i < L.length; i++) {
-      if (!isDone(L[i].id)) return L[i].id;
-    }
-    return null;
-  }
-
   function totalScore() {
     var s = 0;
     Object.keys(scores).forEach(function (k) { s += scores[k] || 0; });
@@ -110,9 +103,7 @@
     $app.innerHTML = html;
 
     document.getElementById("startLevel1Btn").addEventListener("click", function () {
-      var startId = firstUnfinished();
-      if (startId === null) { view = "completion"; render(); return; }
-      currentTier = tierOf(startId);
+      currentTier = "beginner";
       view = "transition";
       levelStage = "learn";
       render();
