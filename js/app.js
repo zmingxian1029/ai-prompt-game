@@ -12,6 +12,7 @@
   var view = "welcome";
   var levelStage = "learn";
   var currentTier = "beginner";
+  var SHARE_URL = "https://github.com/zmingxian1029/ai-prompt-game";
 
   function lang() { return I.getLang(); }
   function pick(obj) { return (obj && obj[lang()] != null) ? obj[lang()] : (obj ? obj.zh : ""); }
@@ -69,6 +70,7 @@
       + '</div>'
       + '<p class="hero-line">' + esc(I.t("heroLine")) + '</p>'
       + '<div class="hero-actions"><button class="cta" id="startJourneyBtn">' + esc(I.t("startJourney")) + '</button></div>'
+      + '<p class="w-source">' + esc(I.t("inspired")) + ' · <a href="https://github.com/anthropics/prompt-eng-interactive-tutorial" target="_blank" rel="noopener">anthropics/prompt-eng-interactive-tutorial</a></p>'
       + '<p class="w-dev">开发者：娴仔 | <a href="mailto:zmingxian1029@163.com">zmingxian1029@163.com</a></p>'
       + '</div>'
       + '</section>';
@@ -453,7 +455,7 @@
     document.getElementById("shareBtn").addEventListener("click", function () {
       A.track("share_click", {});
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(window.location.href).then(function () {
+        navigator.clipboard.writeText(SHARE_URL).then(function () {
           var b = document.getElementById("shareBtn");
           b.textContent = I.t("copied");
         }).catch(function () {});
