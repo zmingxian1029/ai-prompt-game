@@ -55,6 +55,14 @@
     else if (view === "tier") renderTier();
     else if (view === "completion") renderCompletion();
     else renderLevel(view);
+    animatePage();
+  }
+
+  function animatePage() {
+    if (!window.matchMedia || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    $app.classList.remove("page-enter");
+    void $app.offsetWidth;
+    $app.classList.add("page-enter");
   }
 
   function renderWelcome() {
@@ -131,10 +139,8 @@
 
     var range = I.t("tierRange", { a: lvs[0].id, b: lvs[lvs.length - 1].id });
     var start = lvs.filter(function (l) { return !isDone(l.id); })[0] || lvs[0];
-    var ghost = t === "beginner" ? "01" : (t === "intermediate" ? "02" : "03");
 
     var html = '<section class="transition-page">'
-      + '<div class="transition-ghost">' + ghost + '</div>'
       + '<h1 class="transition-big">' + esc(I.t("transition_" + t + "_title")) + '</h1>'
       + '<p class="transition-small">' + esc(range) + '</p>'
       + '<button class="cta" id="transitionStartBtn">' + esc(I.t("transitionStart")) + '</button>'

@@ -35,6 +35,12 @@ a { color: var(--sage-deep); text-decoration: none; }
 a:hover { text-decoration: underline; text-underline-offset: 3px; }
 button, input, textarea { font: inherit; }
 
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+#app.page-enter { animation: page-enter 360ms cubic-bezier(0.22, 1, 0.36, 1); }
+
 .topbar {
   position: sticky;
   top: 0;
@@ -341,22 +347,6 @@ main {
   overflow: hidden;
   text-align: center;
 }
-.transition-ghost {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--mist);
-  font-size: clamp(200px, 32vw, 420px);
-  font-weight: 500;
-  letter-spacing: -0.08em;
-  line-height: 1;
-  opacity: 0.6;
-  user-select: none;
-  pointer-events: none;
-  z-index: 0;
-}
 .transition-big {
   position: relative;
   z-index: 1;
@@ -603,4 +593,8 @@ main {
   .transition-big { font-size: clamp(38px, 11vw, 56px); }
   .completion-score { font-size: clamp(64px, 18vw, 100px); }
   .footer { font-size: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app.page-enter { animation: none; }
 }
