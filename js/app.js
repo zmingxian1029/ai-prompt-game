@@ -57,19 +57,38 @@
   }
 
   function renderWelcome() {
+    var mapTiles = L.map(function (lv) {
+      return '<span class="mini-tile' + (isDone(lv.id) ? ' done' : '') + '">' + String(lv.id).padStart(2, "0") + '</span>';
+    }).join("");
+
     var html = '<section class="welcome">'
+      + '<div class="hero-copy">'
       + '<div class="w-badge">' + esc(I.t("welcomeBadge")) + '</div>'
-      + '<h1>' + esc(I.t("welcomeTitleBefore")) + '<span class="highlight">' + esc(I.t("welcomeTitleHighlight")) + '</span>' + esc(I.t("welcomeTitleAfter")) + '</h1>'
+      + '<h1>' + esc(I.t("welcomeTitleBefore")) + '<br><span class="highlight">' + esc(I.t("welcomeTitleHighlight")) + '</span>' + esc(I.t("welcomeTitleAfter")) + '</h1>'
       + '<p class="w-slogan">' + esc(I.t("welcomeSlogan")) + '</p>'
-      + '<div class="w-stats">'
-      + '<div class="w-stat"><div class="w-stat-value">' + esc(I.t("stat1Value")) + '</div><div class="w-stat-label">' + esc(I.t("stat1Label")) + '</div></div>'
-      + '<div class="w-stat"><div class="w-stat-value">' + esc(I.t("stat2Value")) + '</div><div class="w-stat-label">' + esc(I.t("stat2Label")) + '</div></div>'
-      + '<div class="w-stat"><div class="w-stat-value">' + esc(I.t("stat3Value")) + '</div><div class="w-stat-label">' + esc(I.t("stat3Label")) + '</div></div>'
-      + '</div>'
       + '<p class="w-desc">' + esc(I.t("welcomeDesc")) + '</p>'
-      + '<button class="cta" id="startJourneyBtn">' + esc(I.t("startJourney")) + '</button>'
+      + '<div class="hero-meta">'
+      + '<span>' + esc(I.t("stat1Value")) + ' ' + esc(I.t("stat1Label")) + '</span>'
+      + '<span>' + esc(I.t("stat2Value")) + ' ' + esc(I.t("stat2Label")) + '</span>'
+      + '<span>' + esc(I.t("metaLanguages")) + '</span>'
+      + '</div>'
+      + '<div class="hero-actions"><button class="cta" id="startJourneyBtn">' + esc(I.t("startJourney")) + '</button></div>'
+      + '</div>'
+      + '<div class="hero-bento">'
+      + '<div class="bento-card bento-map"><div class="bento-kicker">' + esc(I.t("heroMapLabel")) + '</div><div class="mini-map">' + mapTiles + '</div></div>'
+      + '<div class="bento-card bento-loop"><div class="bento-kicker">' + esc(I.t("heroLoopLabel")) + '</div>'
+      + '<div class="loop-steps">'
+      + '<div class="loop-step"><span class="loop-index">01</span><span><strong>' + esc(I.t("loopLearnTitle")) + '</strong><small>' + esc(I.t("loopLearnDesc")) + '</small></span></div>'
+      + '<div class="loop-step"><span class="loop-index">02</span><span><strong>' + esc(I.t("loopPlayTitle")) + '</strong><small>' + esc(I.t("loopPlayDesc")) + '</small></span></div>'
+      + '<div class="loop-step"><span class="loop-index">03</span><span><strong>' + esc(I.t("loopJudgeTitle")) + '</strong><small>' + esc(I.t("loopJudgeDesc")) + '</small></span></div>'
+      + '</div></div>'
+      + '<div class="bento-card bento-progress"><div class="bento-kicker">' + esc(I.t("heroProgressLabel")) + '</div><div class="bento-big">' + completed.length + '<span>/' + L.length + '</span></div><div class="progress-bar"><div class="fill" style="width:' + Math.round((completed.length / L.length) * 100) + '%"></div></div></div>'
+      + '<div class="bento-card bento-lang"><div class="bento-kicker">' + esc(I.t("heroLanguageLabel")) + '</div><div class="bento-big bento-lang-value">中文 / EN</div></div>'
+      + '</div>'
+      + '<div class="welcome-foot">'
       + '<p class="w-source">' + esc(I.t("inspired")) + ' · <a href="https://github.com/anthropics/prompt-eng-interactive-tutorial" target="_blank" rel="noopener">anthropics/prompt-eng-interactive-tutorial</a></p>'
       + '<p class="w-dev">开发者：娴仔 | <a href="mailto:zmingxian1029@163.com">zmingxian1029@163.com</a></p>'
+      + '</div>'
       + '</section>';
     $app.innerHTML = html;
     document.getElementById("startJourneyBtn").addEventListener("click", function () {
@@ -86,12 +105,15 @@
       + '<h1 class="overview-title">' + esc(I.t("overviewTitle")) + '</h1>'
       + '<p class="overview-desc">' + esc(I.t("overviewDesc")) + '</p>';
 
-    tiers.forEach(function (t) {
+    tiers.forEach(function (t, idx) {
       var lvs = L.filter(function (l) { return l.tier === t; });
       var range = lvs.length ? I.t("tierRange", { a: lvs[0].id, b: lvs[lvs.length - 1].id }) : "";
       html += '<button class="tier-card" type="button" data-tier="' + t + '">'
+        + '<span class="tier-index">0' + (idx + 1) + '</span>'
+        + '<span class="tier-card-main">'
         + '<span class="tier-pill ' + tierClass(t) + '">' + esc(tierLabel(t)) + '</span>'
         + '<span class="tier-card-range">' + esc(range) + '</span>'
+        + '</span>'
         + '<span class="tier-card-count">' + esc(I.t("levelsCount", { n: lvs.length })) + '</span>'
         + '<span class="tier-card-arrow">→</span>'
         + '</button>';
@@ -125,8 +147,10 @@
 
     var range = I.t("tierRange", { a: lvs[0].id, b: lvs[lvs.length - 1].id });
     var start = lvs.filter(function (l) { return !isDone(l.id); })[0] || lvs[0];
+    var ghost = t === "beginner" ? "01" : (t === "intermediate" ? "02" : "03");
 
     var html = '<section class="transition-page">'
+      + '<div class="transition-ghost">' + ghost + '</div>'
       + '<h1 class="transition-big">' + esc(I.t("transition_" + t + "_title")) + '</h1>'
       + '<p class="transition-small">' + esc(range) + '</p>'
       + '<button class="cta" id="transitionStartBtn">' + esc(I.t("transitionStart")) + '</button>'
@@ -432,10 +456,11 @@
     }).join("");
 
     var html = '<section class="completion">'
-      + '<div class="big">🏆</div>'
+      + '<div class="completion-kicker">COURSE COMPLETE</div>'
+      + '<div class="completion-score">' + String(L.length).padStart(2, "0") + '<span>/' + String(L.length).padStart(2, "0") + '</span></div>'
       + '<h2>' + esc(I.t("completionTitle")) + '</h2>'
-      + '<p>' + esc(I.t("completionSub")) + '</p>'
-      + '<p><strong>' + esc(I.t("yourScore")) + '</strong>: ' + totalScore() + '</p>'
+      + '<div class="success-note"><span class="success-icon">✓</span><div><strong>' + esc(I.t("courseComplete")) + '</strong><p>' + esc(I.t("completionSub")) + '</p></div></div>'
+      + '<p class="completion-total"><strong>' + esc(I.t("yourScore")) + '</strong><span>' + totalScore() + '</span></p>'
       + '<div class="tier-summary">' + tierRows + '</div>'
       + '<div class="btn-row" style="justify-content:center">'
       + '<button class="btn" id="shareBtn">' + esc(I.t("share")) + '</button>'
