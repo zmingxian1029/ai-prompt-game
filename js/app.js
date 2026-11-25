@@ -57,36 +57,18 @@
   }
 
   function renderWelcome() {
-    var mapTiles = L.map(function (lv) {
-      return '<span class="mini-tile' + (isDone(lv.id) ? ' done' : '') + '">' + String(lv.id).padStart(2, "0") + '</span>';
-    }).join("");
-
     var html = '<section class="welcome">'
       + '<div class="hero-copy">'
       + '<div class="w-badge">' + esc(I.t("welcomeBadge")) + '</div>'
       + '<h1>' + esc(I.t("welcomeTitleBefore")) + '<br><span class="highlight">' + esc(I.t("welcomeTitleHighlight")) + '</span>' + esc(I.t("welcomeTitleAfter")) + '</h1>'
       + '<p class="w-slogan">' + esc(I.t("welcomeSlogan")) + '</p>'
-      + '<p class="w-desc">' + esc(I.t("welcomeDesc")) + '</p>'
-      + '<div class="hero-meta">'
-      + '<span>' + esc(I.t("stat1Value")) + ' ' + esc(I.t("stat1Label")) + '</span>'
-      + '<span>' + esc(I.t("stat2Value")) + ' ' + esc(I.t("stat2Label")) + '</span>'
-      + '<span>' + esc(I.t("metaLanguages")) + '</span>'
+      + '<div class="hero-stats">'
+      + '<div class="hero-stat"><div class="hero-stat-value">' + esc(I.t("stat1Value")) + '</div><div class="hero-stat-label">' + esc(I.t("stat1Label")) + '</div></div>'
+      + '<div class="hero-stat"><div class="hero-stat-value">' + esc(I.t("stat2Value")) + '</div><div class="hero-stat-label">' + esc(I.t("stat2Label")) + '</div></div>'
+      + '<div class="hero-stat"><div class="hero-stat-value">' + esc(I.t("heroStat3Value")) + '</div><div class="hero-stat-label">' + esc(I.t("heroStat3Label")) + '</div></div>'
       + '</div>'
+      + '<p class="hero-line">' + esc(I.t("heroLine")) + '</p>'
       + '<div class="hero-actions"><button class="cta" id="startJourneyBtn">' + esc(I.t("startJourney")) + '</button></div>'
-      + '</div>'
-      + '<div class="hero-bento">'
-      + '<div class="bento-card bento-map"><div class="bento-kicker">' + esc(I.t("heroMapLabel")) + '</div><div class="mini-map">' + mapTiles + '</div></div>'
-      + '<div class="bento-card bento-loop"><div class="bento-kicker">' + esc(I.t("heroLoopLabel")) + '</div>'
-      + '<div class="loop-steps">'
-      + '<div class="loop-step"><span class="loop-index">01</span><span><strong>' + esc(I.t("loopLearnTitle")) + '</strong><small>' + esc(I.t("loopLearnDesc")) + '</small></span></div>'
-      + '<div class="loop-step"><span class="loop-index">02</span><span><strong>' + esc(I.t("loopPlayTitle")) + '</strong><small>' + esc(I.t("loopPlayDesc")) + '</small></span></div>'
-      + '<div class="loop-step"><span class="loop-index">03</span><span><strong>' + esc(I.t("loopJudgeTitle")) + '</strong><small>' + esc(I.t("loopJudgeDesc")) + '</small></span></div>'
-      + '</div></div>'
-      + '<div class="bento-card bento-progress"><div class="bento-kicker">' + esc(I.t("heroProgressLabel")) + '</div><div class="bento-big">' + completed.length + '<span>/' + L.length + '</span></div><div class="progress-bar"><div class="fill" style="width:' + Math.round((completed.length / L.length) * 100) + '%"></div></div></div>'
-      + '<div class="bento-card bento-lang"><div class="bento-kicker">' + esc(I.t("heroLanguageLabel")) + '</div><div class="bento-big bento-lang-value">中文 / EN</div></div>'
-      + '</div>'
-      + '<div class="welcome-foot">'
-      + '<p class="w-source">' + esc(I.t("inspired")) + ' · <a href="https://github.com/anthropics/prompt-eng-interactive-tutorial" target="_blank" rel="noopener">anthropics/prompt-eng-interactive-tutorial</a></p>'
       + '<p class="w-dev">开发者：娴仔 | <a href="mailto:zmingxian1029@163.com">zmingxian1029@163.com</a></p>'
       + '</div>'
       + '</section>';
